@@ -1,0 +1,905 @@
+const calculateETA = (distance, speed) => {
+const timeInSeconds = distance / speed;
+const timeInMinutes = timeInSeconds / 60;
+return timeInMinutes.toFixed(0); // ETA in minutes
+};
+
+
+
+ const sanAndresArea = points.filter(loc => loc.municipal == "San Andres")
+
+
+
+
+  const updatePortPosition = async (newCoordinate) => {
+    try {
+      if (specificPort.length === 0) {
+        console.warn("Specific port is empty, cannot update position.");
+        return;
+      }
+  
+      const portDocRef = doc(db, 'ports', specificPort[0].id);
+      await updateDoc(portDocRef, {
+        coordinate: {
+          latitude: newCoordinate.latitude,
+          longitude: newCoordinate.longitude,
+        },
+      });
+      console.log("Coordinates updated successfully!");
+    } catch (error) {
+      console.error("Error updating coordinates: ", error);
+    }
+  };
+  
+
+
+
+
+
+
+
+  const rangeInDegrees = 0.01; 
+  const radiusInMeters = rangeInDegrees * 50500; 
+    
+
+
+
+
+
+
+  const handleModalClose = function() {
+    setOpenModal(false)
+  }
+
+
+
+
+
+
+
+  const handleSignOut = async function() {
+      try {
+        await signOut(auth)
+        await navigation.replace('CommuterHomescreen')
+        console.log("user signed out")
+        
+      }catch(err) {
+        console.log("error: ", err)
+      }
+  }
+  const handleOpen = function() {
+    setOpenModal(true)
+  }
+
+  const handleRecordModalOpen = function() {
+    navigation.navigate('records')
+  }
+
+
+
+
+
+
+
+
+  const handleDragEnd = (event) => {
+    const newCoordinate = event.nativeEvent.coordinate;
+    setPortPostition(newCoordinate);
+  
+    if (specificPort.length === 0) {
+      console.warn("Cannot update port position, specific port is empty.");
+      return;
+    }
+  
+    updatePortPosition(newCoordinate);
+  };
+  
+
+
+  const calculateETA = (distance, speed) => {
+    const timeInSeconds = distance / speed;
+    const timeInMinutes = timeInSeconds / 60;
+    return timeInMinutes.toFixed(0); // ETA in minutes
+  };
+
+
+
+
+
+
+
+
+  useEffect(() => {
+
+
+
+
+
+
+
+    const getLocation = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+        return;
+      }
+
+
+
+
+
+      const updateLocationInFirestore = async (coords) => {
+        try {
+          const userDoc = await doc(db, 'buses', busID);
+          console.log("coords: ", coords);
+          
+          await updateDoc(userDoc, {
+            coordinate: new GeoPoint(coords.latitude, coords.longitude),
+            active: isFocused,
+            speed: coords.speed
+          })
+
+          
+        } catch (error) {
+          console.error("Error updating location in Firestore: ", error);
+        }
+      };
+
+
+
+
+
+
+
+      const locationSubscription = await Location.watchPositionAsync(
+        { 
+          accuracy: Location.Accuracy.High,
+          timeInterval: 500,
+          distanceInterval: 1
+        },
+        (newLocation) => {
+          setLocation(newLocation.coords);
+          // console.log("points: ", points)
+
+          // console.log("Specific: ", specificPort[0].coordinate);
+          
+          if (initialID) updateLocationInFirestore(newLocation.coords);
+      
+
+          const _calculate = async function(ports) {
+            setCurrentSpeed(newLocation.coords.speed)
+            console.log("New location: ", newLocation);
+            
+            try {
+              const distance = await haversine(newLocation.coords, ports, { unit: 'meter' });
+              if (newLocation.coords.speed > 0) {
+                const etaMinutes = await calculateETA(distance, newLocation.coords.speed);
+                await setETA(etaMinutes);
+                console.log("eta: ", eta);
+
+              } else {
+                setETA('Calculating...');
+              }
+            }catch(err) {
+              console.log("ETA-ERROR: ", err);
+              setETA("Nag kaon kana lab.")
+            }
+          } 
+
+
+          console.log("Ter: ", TerminalPorts.map( index => index.id));
+          
+
+          if (TerminalPorts.length > 1) {
+            console.log("Terminals available:", TerminalPorts);
+            const activePort = TerminalPorts.filter(index => index.id == port);
+            console.log("Filtered Port:", activePort);
+          
+            if (activePort.length > 0) {
+              setSpecificPort(activePort);
+              _calculate(activePort);
+            } else {
+              console.warn("No active port found.");
+            }
+          }
+
+          // if(TerminalPorts) {
+          //   const activePort = TerminalPorts.filter( index => index.id == port)
+            
+          //   console.log("activePort: ", activePort);
+          //   _calculate(activePort[0])
+          //   setSpecificPort(activePort[0])
+            
+          // }
+
+
+        }
+      )
+      return () => {
+        locationSubscription.remove();
+      };
+    };
+
+    
+    getLocation();
+  }, []);
+
+
+
+
+
+               {/* {
+                        TerminalPorts.map( ports => {
+                          return (
+                            <Marker
+                              key={ports.id}
+                              coordinate={{
+                                latitude: ports.coordinate.latitude,
+                                longitude: ports.coordinate.longitude
+                              }}
+                              title={`Port: ${ ports.id  }`}
+                              description={ `Heading to ${ ports.id }`}
+                              anchor={{ x: 0.5, y: 1.2 }}  
+                              calloutAnchor={{ x: 0.5, y: 0 }} 
+                            >
+                               <Image
+                                source={require('../assets/images/Pin.png')} 
+                                style={{ width: 55, height: 55 }}
+                              />
+                            </Marker>
+                          )
+                        })
+                    } */}
+
+
+
+
+this is the path, "reports/(years example "2024, 2023,2022")/(new subcollection, where is the months example "January to December")/(inside of every months documents has "days" field a type of map and inside of days field has the every day report each they start with 0 and has a type of map)"
+after reaching that path inside of each day has the expenses and revenue, bus_number, name of conductor who reported and the time report happen. the issue i want you to solve is to update the expenses and revenue from that path, instead of using the revenue collection because it is no longer neccesary on project
+
+
+
+help to fetch the  data from my firestoredatabase, the path is "schedule/(routes such as Pandan, Viga, Bagamanoc)/fields like fromTo, and toFrom. each of those fields has a type of map and has starting index of 0. each index has destination and origin and departure, the issue is i want to get each index to be selectable on dropdown with selectedRoute state when one of those index selected it should update the field and index where it selected, i mean to add new value on mapped index of bus_number , bus_number that perform the selection
+
+
+it supposed to fetch all data on collection path, schedule/(route names like "Viga, Bagamanoc, Pandan")/(here is the fromTo and toFrom map fields)
+the fromTo and toFrom values is a map type so it is an Object inside of those two fields there's the indexes the type of those indexes is also a map or an Object, so now the destination and origin inside of that path is the primary target.
+also there is a "label" values inside of those toFrom and fromTo fields, please note the values of those two field(fromTo and toFrom is vise versa) that is why they are implemented always the same indexes,
+my concern is to make a floating container when a select route button is clicked, the floating container displays all available routes with their fromTo data and toFrom data every route id has card with values of fromTo and toFrom data and that fromTo and toFrom should have its label 
+
+
+          {/* {
+              points && points.map((point, index) => (
+                <Circle
+                  key={index}
+                  center={{ latitude: point.coordinates[0], longitude: point.coordinates[1] }}
+                  fillColor='#f4b44660'
+                  strokeColor='#f4b446'
+                  radius={radiusInMeters}
+                />
+              ))
+            } */}
+
+
+
+  const areMarkersClose = (marker1, marker2, thresholdInKm) => {
+    const distance = haversineDistance(marker1, marker2);
+    return distance <= thresholdInKm;
+  };
+  
+
+
+
+    {Object.keys(schedules).map(route => (
+        <View key={route} style={styles.routeContainer}>
+          <Text style={styles.routeLabel} variant="headlineMedium">{route}</Text>
+
+          {/* FromTo Card */}
+          {schedules[route].fromTo && (
+            <Card style={styles.card}>
+              <Card.Content>
+                {Object.keys(schedules[route].fromTo).map(index => (
+                  <View key={index}>
+                    <Text style={styles.cardTitle}>{schedules[route].fromTo[index].label}</Text>
+                    {Object.keys(schedules[route].fromTo[index]).map(field => (
+                      <Text key={field} style={styles.fieldText}>
+                        {field}: {schedules[route].fromTo[index][field]}
+                      </Text>
+                    ))}
+                    <Divider style={styles.divider} />
+                  </View>
+                ))}
+              </Card.Content>
+            </Card>
+          )}
+
+          {/* ToFrom Card */}
+          {schedules[route].toFrom && (
+            <Card style={styles.card}>
+              <Card.Title title="To From" titleStyle={styles.cardTitle} />
+              <Card.Content>
+                {Object.keys(schedules[route].toFrom).map(index => (
+                  <View key={index}>
+                      <Text>{ Object.values(schedules[route].toFrom) }</Text>
+                  </View>
+                ))}
+              </Card.Content>
+            </Card>
+          )}
+        </View>
+      ))}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useEffect, useState, useContext } from 'react';
+import { View, StyleSheet, ActivityIndicator, Text, Image, Pressable } from 'react-native';
+import MapView, { Marker, Circle } from 'react-native-maps';
+import * as Location from 'expo-location';
+import { doc, GeoPoint, onSnapshot, updateDoc, collection, getDoc } from 'firebase/firestore';
+import { db, auth } from '../firebaseConfig';
+import { useIsFocused } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
+import { AuthContext } from '../contexts/AuthContext';
+import { signOut, getAuth } from 'firebase/auth';
+import ModalMessage from '../components/Modal';
+import { useNavigation } from '@react-navigation/native';
+import { OperatorIDContext } from '../contexts/OperatorIDContext';
+import { PortsContext } from '../contexts/PortsContext';
+import haversine from 'haversine';
+import { useMapDetails } from '../contexts/MapDetails';
+import { MaterialIcons } from '@expo/vector-icons';
+import Geocoding from '../components/Geocoding';
+import Record from './Record';
+import { DriversContext } from '../contexts/getDrivers';
+import { BusesContext } from '../contexts/getBuses';
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371000; 
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) *
+      Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; 
+}
+
+
+const HomescreenOperator = () => {
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const isFocused = useIsFocused()
+  const { id, driver, bus_number, status, destination, port } = useContext(AuthContext)
+  const [ openModal, setOpenModal ] = useState(false)
+  const auth = getAuth()
+  const navigation = useNavigation()
+  const { initialID } = useContext(OperatorIDContext)
+  const { TerminalPorts } = useContext(PortsContext)
+  const [ specificPort ,setSpecificPort ] = useState([])
+  const [ portPosition, setPortPostition ] = useState(null)
+  const [ currentSpeed, setCurrentSpeed ] = useState(0);
+  const [ eta, setETA] = useState('Calculating...');
+  const { points } = useMapDetails()
+  const { selectedB, busID } = useContext(BusesContext)
+  const { selectedD } = useContext(DriversContext)
+
+
+  const sanAndresArea = points.filter(loc => loc.municipal == "San Andres")
+
+
+
+
+  const updatePortPosition = async (newCoordinate) => {
+    try {
+      if (specificPort.length === 0) {
+        console.warn("Specific port is empty, cannot update position.");
+        return;
+      }
+  
+      const portDocRef = doc(db, 'ports', specificPort[0].id);
+      await updateDoc(portDocRef, {
+        coordinate: {
+          latitude: newCoordinate.latitude,
+          longitude: newCoordinate.longitude,
+        },
+      });
+      console.log("Coordinates updated successfully!");
+    } catch (error) {
+      console.error("Error updating coordinates: ", error);
+    }
+  };
+  
+  const rangeInDegrees = 0.01; 
+  const radiusInMeters = rangeInDegrees * 50500; 
+    
+
+  const handleModalClose = function() {
+    setOpenModal(false)
+  }
+  const handleSignOut = async function() {
+      try {
+        await signOut(auth)
+        await navigation.replace('CommuterHomescreen')
+        console.log("user signed out")
+        
+      }catch(err) {
+        console.log("error: ", err)
+      }
+  }
+  const handleOpen = function() {
+    setOpenModal(true)
+  }
+
+  const handleRecordModalOpen = function() {
+    navigation.navigate('records')
+  }
+
+
+
+
+
+  // const handleDragEnd = (event) => {
+  //   const newCoordinate = event.nativeEvent.coordinate;
+  //   setPortPostition(newCoordinate)
+  //   updatePortPosition(newCoordinate);
+  // };
+
+
+
+  const handleDragEnd = (event) => {
+    const newCoordinate = event.nativeEvent.coordinate;
+    setPortPostition(newCoordinate);
+  
+    if (specificPort.length === 0) {
+      console.warn("Cannot update port position, specific port is empty.");
+      return;
+    }
+  
+    updatePortPosition(newCoordinate);
+  };
+  
+  useEffect(() => {
+    const getLocation = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+        return;
+      }
+      const calculateETA = (distance, speed) => {
+        const timeInSeconds = distance / speed;
+        const timeInMinutes = timeInSeconds / 60;
+        return timeInMinutes.toFixed(0); // ETA in minutes
+      };
+      const updateLocationInFirestore = async (coords) => {
+        try {
+          const userDoc = await doc(db, 'buses', busID);
+          console.log("coords: ", coords);
+          
+          await updateDoc(userDoc, {
+            coordinate: new GeoPoint(coords.latitude, coords.longitude),
+            active: isFocused,
+            speed: coords.speed
+          })
+
+          
+        } catch (error) {
+          console.error("Error updating location in Firestore: ", error);
+        }
+      };
+
+      const locationSubscription = await Location.watchPositionAsync(
+        { 
+          accuracy: Location.Accuracy.High,
+          timeInterval: 500,
+          distanceInterval: 1
+        },
+        (newLocation) => {
+          setLocation(newLocation.coords);
+          // console.log("points: ", points)
+
+          // console.log("Specific: ", specificPort[0].coordinate);
+          
+          if (initialID) updateLocationInFirestore(newLocation.coords);
+      
+
+          const _calculate = async function(ports) {
+            setCurrentSpeed(newLocation.coords.speed)
+            console.log("New location: ", newLocation);
+            
+            try {
+              const distance = await haversine(newLocation.coords, ports, { unit: 'meter' });
+              if (newLocation.coords.speed > 0) {
+                const etaMinutes = await calculateETA(distance, newLocation.coords.speed);
+                await setETA(etaMinutes);
+                console.log("eta: ", eta);
+
+              } else {
+                setETA('Calculating...');
+              }
+            }catch(err) {
+              console.log("ETA-ERROR: ", err);
+              setETA("Nag kaon kana lab.")
+            }
+          } 
+          if(TerminalPorts.length > 1) {
+            console.log("Terminals: ", TerminalPorts);
+            var activePort = TerminalPorts.filter( index => index.id === port)
+            console.log("ActivePort: ", activePort[0]);
+            setSpecificPort(activePort)
+            _calculate(activePort[0])
+
+            
+          }
+          
+
+          // if(TerminalPorts) {
+          //   const activePort = TerminalPorts.filter( index => index.id == port)
+            
+          //   console.log("activePort: ", activePort);
+          //   _calculate(activePort[0])
+          //   setSpecificPort(activePort[0])
+            
+          // }
+
+
+        }
+      )
+      return () => {
+        locationSubscription.remove();
+      };
+    };
+
+    
+    getLocation();
+  }, []);
+
+
+  if (errorMsg) {
+    return <View><Text>{errorMsg}</Text></View>;
+  }
+
+  if (!location) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size={ 60 } color="#F4B446" />
+      </View>
+    );
+  }
+  return (
+    <View style={styles.container}>
+      <StatusBar backgroundColor='#000'/>
+      <ModalMessage confirm={()=> handleSignOut() } close={handleModalClose} open={openModal}  title="Confirm logout" message="Are you sure you want to logout?"/>
+
+        <MapView
+          style={styles.map}
+          region={{
+            latitude: 13.6184232,
+            longitude: 124.0756445,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1,
+          }}
+        >
+
+         
+        {/* {
+          points && points.map((point, index) => (
+            <Circle
+              key={index}
+              center={{ latitude: point.coordinates[0], longitude: point.coordinates[1] }}
+              fillColor='#f4b44660'
+              strokeColor='#f4b446'
+              radius={radiusInMeters}
+            />
+          ))
+        } */}
+
+
+          <Marker 
+            coordinate={{ latitude: location.latitude, longitude: location.longitude }}
+          >
+            <Image style={{height: 55, width: 55}} source={require('../assets/images/Marker.png')}/>
+          </Marker>
+          {
+            specificPort && specificPort.map( index => {
+              // console.log("speficific: ",index);
+              
+              return (
+                <View>
+                  <Marker draggable onDragEnd={handleDragEnd} coordinate={portPosition ? portPosition:{ latitude: index.latitude, longitude: index.longitude }}>
+                    <Image style={{height: 55, width: 55}} source={require('../assets/images/Pin.png')}/>
+                  </Marker>
+                </View>
+              )
+            })
+          }
+
+        
+        </MapView>
+            <View style={styles.info}>
+              <Pressable onPress={()=> handleRecordModalOpen() } style={styles.recordButton}>
+                <MaterialIcons style={{borderColor: 'red'}} name="add-chart" size={20} color="#fff" />
+                <Text style={{color: '#fff'}}>Records</Text>
+              </Pressable>
+              <Geocoding markerPosition={location}/>
+              <View style={[{
+                height: 50,
+                width: '100%',
+                backgroundColor: '#fff',
+                alignItems: 'center',
+                borderRadius: 10,
+                marginBottom: 10,
+                flexDirection: 'row',
+                paddingLeft: 25,
+              },styles.card]}>
+                      {/* <Text>Current Speed: {currentSpeed ? currentSpeed : 'Calculating...'} m/s</Text> */}
+                      <Text style={{fontSize: 16, color: "#f4b446", fontFamily: 'Poppins-Regular'}}>Estimated Time Arrival </Text>
+                      <Text style={{fontFamily: 'Poppins-Regular'}}>{eta !== 'Calculating...'? ${eta} min. : '0'}</Text>
+                
+              </View>
+              <View style={[{
+                height: 80,
+                width: '100%',
+                backgroundColor: '#fff',
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: 10,
+                marginBottom: 10,
+                alignItems: 'center',
+                justifyContent: 'center'
+              }, styles.card]}>
+                  <View style={[{width: '90%', height: '90%', alignItems: 'center', flexDirection: 'row', position: 'relative'}]}>
+                    <Image source={require('../assets/images/random42-logo.png')} style={{width: 50, height: 50, borderRadius: 50}}/>
+                    <View style={{ marginLeft: 15}}>
+                      <Text style={{color: '#F4B446', fontFamily: 'Poppins-Regular', fontSize: 20}}>{ bus_number ? bus_number:'Unavailable' } <Text style={{color: '#000', fontSize: 13}}>Operator.</Text></Text>
+                      <Text style={{fontSize: 11, color: '#00000090'}}>{  driver ? driver:'Default N.' }</Text>
+                    </View>
+                    <View style={{position: 'absolute', width: '20%', right: 0, height: '70%', alignItems: 'center', justifyContent: 'center'}}>
+                        <Pressable style={{color: '#F4B446', height: '100%', width: '100%', alignItems: 'center', justifyContent: 'center'}} onPress={()=> handleOpen() }>
+                          <MaterialIcons name='logout' size={24} color="#0008"/>
+                        </Pressable>
+                    </View>
+                  </View>
+              </View>
+              <View style={[{
+                height: 90,
+                width: '100%',
+                backgroundColor: '#fff',
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: 10
+              }, styles.card]}>
+                <View style={{
+                  width: '90%',
+                  height: '70%',
+                  justifyContent: 'center',
+                }}>
+                  <View style={{height: '50%', width: '100%', justifyContent: 'center'}}>
+                    <Text style={{
+                      fontSize: 20,
+                      color: '#F4B446',
+                      marginLeft: 10
+                    }}>Destination</Text>
+                  </View>
+                  <View style={{height: '50%', alignItems: 'center', paddingLeft: 10, flexDirection: 'row',fontFamily: 'Poppins-Regular'}}>
+                      <MaterialIcons name="location-on" color="red" />
+                      <Text style={{marginLeft: 10, fontFamily: 'Poppins-Regular'}}>{ destination }</Text>
+                  </View>
+                </View>
+              </View>
+          </View>
+    </View>
+
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    width: '100%',
+    height: "100%",
+  },
+  map: {
+    flex: 1,
+    height: '100%',
+    width: '100%',
+  },
+  navbar: {
+    height: 150,
+    justifyContent: "center",
+    alignItems: 'center',
+    position: 'absolute',
+    zIndex: 2,
+    top: 0,
+    width: '98%'
+  },
+  navbarContent: {
+    width: '98%',
+    height: '90%',
+    flexDirection: 'row',
+    paddingLeft: 10,
+    paddingRight: 10,
+    alignItems: 'center',
+    justifyContent: "center"
+  },
+  nav: {
+    flexDirection: 'row',
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingRight: 30,
+    borderWidth: 1
+  },
+  info: {
+    position: 'absolute',
+    bottom: 50,
+    width: '90%',
+    alignItems: 'center', 
+    justifyContent: 'center',
+    // borderWidth: 2,
+    // borderColor: '#000'
+  },
+  card: {
+    shadowColor: '#00000098',
+    shadowOffset: { width: 0, height: 0},
+    shadowRadius: 40,
+    elevation: 5
+  },
+  recordButton: {
+    backgroundColor: '#043f23',
+    alignSelf: 'flex-end',
+    margin: 10,
+    width: '25%',
+    borderRadius: 15,
+    borderWidth: 1,
+    display: 'flex',
+    flexDirection: "row",
+    height: 50,
+    alignItems: 'center',
+    justifyContent: "center",
+    gap: 5
+  }
+});
+
+export default HomescreenOperator;
+
+
+
+
+
+// {
+//   "expo": {
+//     "name": "finalApp",
+//     "slug": "finalApp",
+//     "version": "1.0.0",
+//     "orientation": "portrait",
+//     "icon": "./assets/images/icon.png",
+//     "scheme": "myapp",
+//     "userInterfaceStyle": "automatic",
+//     "newArchEnabled": true,
+//     "ios": {
+//       "supportsTablet": true
+//     },
+//     "android": {
+//       "adaptiveIcon": {
+//         "foregroundImage": "./assets/images/adaptive-icon.png",
+//         "backgroundColor": "#ffffff"
+//       }
+//     },
+//     "web": {
+//       "bundler": "metro",
+//       "output": "static",
+//       "favicon": "./assets/images/favicon.png"
+//     },
+//     "plugins": [
+//       "expo-router",
+//       [
+//         "expo-splash-screen",
+//         {
+//           "image": "./assets/images/splash-icon.png",
+//           "imageWidth": 200,
+//           "resizeMode": "contain",
+//           "backgroundColor": "#ffffff"
+//         }
+//       ]
+//     ],
+//     "experiments": {
+//       "typedRoutes": true
+//     }
+//   }
+// }
+
+
+
+
+
+{
+  "expo": {
+    "name": "Cat Island Express",
+    "slug": "Cat Island Express",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/catexpress.png",
+    "scheme": "ridewise-app",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/catexpress.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/catexpress.png",
+        "backgroundColor": "#ffffff"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDqKNqNu1VPU4zLX66m0j-7FG_YFDMnEr4"
+        }
+      },
+      "package": "com.jaysonthecoder.Ridewise",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE"
+      ]
+      
+
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "ba0fa9fe-ed55-4ef3-b9d4-83f2947f4f03"
+      }
+    }
+  }
+}
